@@ -1,9 +1,24 @@
 #!/usr/bin/env node
-var debug = require('debug')('ThisThat');
+var debug = require('debug')('localServer');
 var app = require('../app');
+var db = require('../models');
 
 app.set('port', process.env.PORT || 3000);
 
-var server = app.listen(app.get('port'), function() {
-  debug('Express server listening on port ' + server.address().port);
-});
+console.log('Listening on port: ' + app.get('port'));
+
+console.log();
+
+db
+    .sequelize
+    .sync({ force: false})
+    .complete(function(err) {
+        if (err) {
+            throw err[0]
+        } else {
+            console.log("db connected");
+            var server = app.listen(app.get('port'), function() {
+                debug('Express server listening on port ' + server.address().port);
+            });
+        }
+    });
