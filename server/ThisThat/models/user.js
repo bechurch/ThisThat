@@ -19,6 +19,7 @@ module.exports = function(sequelize, DataTypes) {
             associate: function(models) {
                 User.hasMany(models.ThisThat);
                 User.hasMany(models.Vote);
+                User.hasMany(models.Token);
             },
             tableName: 'users'
         }

@@ -12,6 +12,9 @@ var users = require('./routes/users');
 var routes = require('./routes/index');
 var api_users = require('./routes/api/v1/users');
 var api_thisthat = require('./routes/api/v1/thisthats');
+var api_auth = require('./routes/api/v1/auth');
+
+var passport = require('passport');
 
 
 console.log("server is now running");
@@ -27,6 +30,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(passport.initialize());
 
 var crypto = require('crypto');
 
@@ -64,6 +69,8 @@ app.use('/users', users);
 
 app.use('/api/v1/users', api_users);
 app.use('/api/v1/thisthats', api_thisthat);
+
+app.use('/api/v1/auth', api_auth);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
