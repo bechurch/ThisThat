@@ -3,6 +3,7 @@ var router = express.Router();
 var db = require('../../../models');
 var passwordHash = require('password-hash');
 var validator = require('validator');
+var authController = require('../../../controllers/auth');
 
 router.post('/', function(req, res) {
     var username = req.body.username;
@@ -33,6 +34,36 @@ router.post('/', function(req, res) {
                 }
             });
     }
+
+});
+
+router.delete('/', authController.isAuthenticated, function(req, res) {
+    db
+        .User
+        .find({ where: { id: req.user.id}})
+        .complete(function (err, user) {
+            if (!!err) {
+                console.log('An error occurred while searching thisthat:', err);
+                res.json('An error occurred while searching thisthat');
+            }
+            else {
+                user
+                    .destroy()
+                    .complete(function(err){
+                        if(!!err) {
+                            console.log(err);
+                            res.json('thisthat failed to delete from database');
+                        }
+                        else {
+                            res.send(200);
+                        }
+                    })
+
+
+            }
+
+        })
+
 
 });
 

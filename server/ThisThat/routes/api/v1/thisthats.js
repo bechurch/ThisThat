@@ -3,27 +3,12 @@ var router = express.Router();
 var db = require('../../../models');
 var fs = require('fs');
 var passwordHash = require('password-hash');
+var authController = require('../../../controllers/auth');
 
 
-function checkUserExists(res, req, callback) {
-    db
-        .User
-        .find({ where: { username: req.body.username} })
-        .complete(function (err, user) {
-            if (!!err) {
-                console.log('An error occurred while searching user:', err);
-                res.json('An error occurred while searching user');
-            } else if (!user || !passwordHash.verify(req.body.password, user.password)) {
-                console.log('No user with those credentials exist', err);
-                res.json('No user with those credentials exist');
-            }
-            else {
-                callback(res, req, user)
-            }
-        })
-};
 
-function checkThisThatExists(res, req, user) {
+
+function checkThisThatExists(res, req, callback) {
     db
         .ThisThat
         .find({ where: { id: req.params.id}})
@@ -36,34 +21,28 @@ function checkThisThatExists(res, req, user) {
                 res.json('No experience matches the id');
             }
             else {
-                checkUserCanVote(res, req, user, thisthat)
+                callback(res, req, thisthat)
             }
 
         })
 
 };
 
-function checkUserCanVote(res, req, user, thisthat) {
-
-
-    if (thisthat.hasUser(user)) {
+function checkUserCanVote(res, req, thisthat) {
+    if (thisthat.hasUser(req.user)) {
         res.json('user does owns this experience and cannot vote')
     }
     else {
-        /*
-        1. check vote doesnot exist
-        2. create vote
-        3. save vote
-        4. increase count
-        5. save thisthat
-        6. delete vote if it doesn't save properly
-         */
+
         db
             .Vote
-            .findOrCreate({userId: user.id}, {thisthatId: thisthat.id}, {vote:req.params.image_name})
-            .success(function(vote, created) {
-                if (created) {
-                    //increment vote
+            .findOrCreate({userId: req.user.id, thisthatId: thisthat.id}, {vote:req.params.image_name})
+            .complete(function(err, vote, created) {
+                if(!!err) {
+                    console.log(err);
+                    res.json("error while voting");
+                }
+                else if (created) {
                     incrementVote(res, req, thisthat, vote);
                 }
                 else {
@@ -115,74 +94,71 @@ function incrementVote(res, req, thisthat, vote) {
 
 };
 
-router.post('/:id/:image_name/vote', function(req, res) {
-    console.log(req.params.image_name);
+router.post('/:id/:image_name/vote', authController.tokenIsAuthenticated, function(req, res) {
 
-    if(!req.body.username || !req.body.password) {
-        res.json('Please provide Login Credentials')
-    }
-    else if (req.params.image_name != 'image1' && req.params.image_name != 'image2') {
+ if (req.params.image_name != 'image1' && req.params.image_name != 'image2') {
         res.json('Please specify image1 or image2')
     }
     else {
-        checkUserExists(res, req, checkThisThatExists)
+        checkThisThatExists(res, req, checkUserCanVote)
     }
 
 });
 
 
-router.delete('/:id', function(req, res) {
-    var username = req.body.username;
-    var thisthat_id = req.params.id;
+router.delete('/:id', authController.tokenIsAuthenticated, function(req, res) {
     db
-        .User
-        .find({ where: { username: username} })
-        .complete(function (err, user) {
+        .ThisThat
+        .find({ where: { id: req.params.id}})
+        .complete(function (err, thisthat) {
             if (!!err) {
-                console.log('An error occurred while searching user:', err);
-                res.json('An error occurred while searching user');
-            } else if (!user|| !passwordHash.verify(req.body.password, user.password)) {
-                console.log('No user with those credentials exist', err);
-                res.json('No user with those credentials exist');
+                console.log('An error occurred while searching thisthat:', err);
+                res.json('An error occurred while searching thisthat');
+            } else if (!thisthat) {
+                console.log('No thisthat matches the id');
+                res.json('No thisthat matches the id');
             }
             else {
-                db
-                    .ThisThat
-                    .find({ where: { id: thisthat_id}})
-                    .complete(function (err, thisthat) {
-                        if (!!err) {
-                            console.log('An error occurred while searching thisthat:', err);
-                            res.json('An error occurred while searching thisthat');
-                        } else if (!thisthat) {
-                            console.log('No thisthat matches the id');
-                            res.json('No thisthat matches the id');
-                        }
-                        else {
-                            if (!thisthat.hasUser(user)) {
-                                res.json('user does not own this thisthat')
-                            }
-                            else {
-                                thisthat
-                                    .destroy()
-                                    .complete(function(err){
-                                        if(!!err) {
-                                            console.log(err);
-                                            res.json('thisthat failed to delete from database');
-                                        }
-                                        else {
-                                            res.send(200);
-                                        }
-                                    })
-                            }
+                if (!thisthat.hasUser(req.user)) {
+                    res.json('user does not own this thisthat')
+                }
+                else {
+                    deleteThisThat(req, res, thisthat);
+
+                }
 
 
-                        }
+            }
 
-                    })
+        })
+
+
+});
+
+function deleteThisThat (req, res, thisthat) {
+    //var image1_path = 'public' + thisthat.image_1;
+    //var image2_path = 'public' + thisthat.image_2;
+
+    thisthat
+        .destroy()
+        .complete(function(err){
+            if(!!err) {
+                console.log(err);
+                res.json('thisthat failed to delete from database');
+            }
+            else {
+                //fs.unlink(image1_path);
+                //fs.unlink(image2_path);
+
+                res.send(200);
             }
         })
 
-});
+
+
+
+
+};
 
 router.get('/all', function(req, res) {
     db
@@ -206,31 +182,60 @@ router.get('/all', function(req, res) {
         })
 });
 
-router.post('/', function(req, res) {
-    var username = req.body.username;
+router.get('/', authController.tokenIsAuthenticated, function(req, res) {
+    var sql_query = 'select * from thisthat where id NOT IN ' +
+        '(select "thisthatId" from votes where "userId" = ' +
+        req.user.id +
+        ') AND "userId" != ' +
+        req.user.id
+        +
+        ' ORDER BY "thisthat"."createdAt" DESC';
+
+    db
+        .sequelize
+        .query(sql_query)
+        .success(function (thisthats){
+            res.set('Content-Type', 'application/json');
+            var returnObject = {
+                thisthats:thisthats
+            };
+
+            res.send(JSON.stringify(returnObject));
+
+        });
+
+});
+
+router.get('/my', authController.tokenIsAuthenticated, function(req, res) {
+    db
+        .ThisThat
+        .findAll({ where:{userId: req.user.id}})
+        .complete(function(err, thisthats) {
+            if(!!err) {
+                console.log("An error occurred retrieving ThisThats:", err);
+                res.send("An error occurred retrieving ThisThats");
+            } else if (!thisthats) {
+                console.log("no ThisThats found");
+                res.send("no ThisThats found");
+            } else {
+                res.set('Content-Type', 'application/json');
+                var returnObject = {
+                    ThisThats:thisthats
+                };
+
+                res.send(JSON.stringify(returnObject));
+            }
+        })
+});
+
+router.post('/', authController.tokenIsAuthenticated, function(req, res) {
 
     if (objectLength(req.files) != 2) {
         thisThatPostFailed(res, req, "need to upload 2 images")
     }
 
-    else if (!username || !req.body.password) {
-        thisThatPostFailed(res, req, "missing credentials")
-
-    }
     else {
-        db
-            .User
-            .find({ where: { username: username} })
-            .complete(function (err, user) {
-                if (!!err) {
-                    thisThatPostFailed(res, req, 'An error occurred while searching user:');
-                } else if (!user || !passwordHash.verify(req.body.password, user.password)) {
-                    thisThatPostFailed(res, req, 'No user with those credentials exist');
-                }
-                else {
-                    createThisThat(res, req, user);
-                }
-            })
+        createThisThat(res, req, req.user);
     }
 
 });

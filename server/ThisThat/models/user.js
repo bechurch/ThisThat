@@ -17,9 +17,9 @@ module.exports = function(sequelize, DataTypes) {
     }, {
         classMethods: {
             associate: function(models) {
-                User.hasMany(models.ThisThat);
+                User.hasMany(models.ThisThat, {onDelete: 'cascade', hooks: true});
                 User.hasMany(models.Vote);
-                User.hasMany(models.Token);
+                User.hasMany(models.Token, {onDelete: 'cascade'});
             },
             tableName: 'users'
         }

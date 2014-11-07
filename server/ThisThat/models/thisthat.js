@@ -1,3 +1,5 @@
+var fs = require('fs');
+
 module.exports = function(sequelize, DataTypes) {
     var ThisThat = sequelize.define('ThisThat', {
         is_active: {
@@ -31,7 +33,7 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 ThisThat.belongsTo(models.User);
-                ThisThat.hasMany(models.Vote);
+                ThisThat.hasMany(models.Vote, {onDelete: 'cascade'});
             }
 
         },
@@ -44,6 +46,16 @@ module.exports = function(sequelize, DataTypes) {
             }
         },
         tableName: 'thisthat'
+    });
+
+    ThisThat.hook('afterDestroy', function(thisthat, fn) {
+        var image1_path = 'public' + thisthat.image_1;
+        var image2_path = 'public' + thisthat.image_2;
+
+        fs.unlink(image1_path);
+        fs.unlink(image2_path);
+
+        return fn();
     });
 
     return ThisThat

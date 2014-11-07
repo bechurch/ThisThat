@@ -4,6 +4,8 @@ module.exports = function(sequelize, DataTypes) {
     }, {
         classMethods: {
             associate: function(models) {
+                Vote.belongsTo(models.User, {foreignKey: 'userId', as: 'user'});
+                Vote.belongsTo(models.ThisThat, {foreignKey: 'thisthatId', as: 'thisthat'});
             },
             tableName: 'votes'
         }
