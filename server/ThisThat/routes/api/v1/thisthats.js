@@ -2,7 +2,6 @@ var express = require('express');
 var router = express.Router();
 var db = require('../../../models');
 var fs = require('fs');
-var passwordHash = require('password-hash');
 var authController = require('../../../controllers/auth');
 
 
@@ -183,13 +182,26 @@ router.get('/all', function(req, res) {
 });
 
 router.get('/', authController.tokenIsAuthenticated, function(req, res) {
-    var sql_query = 'select * from thisthat where id NOT IN ' +
-        '(select "thisthatId" from votes where "userId" = ' +
-        req.user.id +
-        ') AND "userId" != ' +
-        req.user.id
-        +
-        ' ORDER BY "thisthat"."createdAt" DESC';
+    var sql_query = 'select "thisthats"."id", ' +
+        '"thisthats"."expires_at", ' +
+        '"thisthats"."message", ' +
+        '"thisthats"."image_1", ' +
+        '"thisthats"."image_2", ' +
+        '"thisthats"."vote_count_1", ' +
+        '"thisthats"."vote_count_2", ' +
+        '"thisthats"."createdAt", ' +
+        '"thisthats"."userId", ' +
+        '"users"."username" ' +
+        'from ' +
+            '(select * from thisthat where id NOT IN ' +
+                '(select "thisthatId" from votes where "userId" = ' +
+                    req.user.id +
+                ')' +
+            ' AND "is_active" = true AND "userId" != ' +
+                req.user.id +
+        ') AS thisthats ' +
+        'LEFT JOIN users on "thisthats"."userId" = "users"."id" ' +
+        'ORDER BY "thisthats"."createdAt" DESC';
 
     db
         .sequelize
