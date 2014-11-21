@@ -240,6 +240,43 @@ router.get('/my', authController.tokenIsAuthenticated, function(req, res) {
         })
 });
 
+router.get('/my/votes', authController.tokenIsAuthenticated, function(req, res) {
+    var sql_query = 'select "thisthats"."id", ' +
+        '"thisthats"."expires_at", ' +
+        '"thisthats"."message", ' +
+        '"thisthats"."image_1", ' +
+        '"thisthats"."image_2", ' +
+        '"thisthats"."vote_count_1", ' +
+        '"thisthats"."vote_count_2", ' +
+        '"thisthats"."createdAt", ' +
+        '"thisthats"."userId", ' +
+        '"users"."username" ' +
+        'from ' +
+        '(select * from thisthat where id IN ' +
+        '(select "thisthatId" from votes where "userId" = ' +
+        req.user.id +
+        ')' +
+        ' AND "is_active" = true AND "userId" != ' +
+        req.user.id +
+        ') AS thisthats ' +
+        'LEFT JOIN users on "thisthats"."userId" = "users"."id" ' +
+        'ORDER BY "thisthats"."createdAt" DESC';
+
+    db
+        .sequelize
+        .query(sql_query)
+        .success(function (thisthats){
+            res.set('Content-Type', 'application/json');
+            var returnObject = {
+                thisthats:thisthats
+            };
+
+            res.send(JSON.stringify(returnObject));
+
+        });
+
+});
+
 router.post('/', authController.tokenIsAuthenticated, function(req, res) {
 
     if (objectLength(req.files) != 2) {
