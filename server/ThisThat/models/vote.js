@@ -1,6 +1,6 @@
 module.exports = function(sequelize, DataTypes) {
     var Vote = sequelize.define('Vote', {
-        vote: DataTypes.STRING
+        vote: DataTypes.INTEGER
     }, {
         classMethods: {
             associate: function(models) {

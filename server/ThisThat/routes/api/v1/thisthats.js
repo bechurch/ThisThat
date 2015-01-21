@@ -35,7 +35,7 @@ function checkUserCanVote(res, req, thisthat) {
 
         db
             .Vote
-            .findOrCreate({userId: req.user.id, thisthatId: thisthat.id}, {vote:req.params.image_name})
+            .findOrCreate({userId: req.user.id, thisthatId: thisthat.id}, {vote:req.params.image_id})
             .complete(function(err, vote, created) {
                 if(!!err) {
                     console.log(err);
@@ -54,7 +54,7 @@ function checkUserCanVote(res, req, thisthat) {
 };
 
 function incrementVote(res, req, thisthat, vote) {
-    if (req.params.image_name === 'image1') {
+    if (req.params.image_id === '1') {
         thisthat.vote_count_1 = thisthat.vote_count_1 + 1;
         thisthat
             .save()
@@ -70,7 +70,7 @@ function incrementVote(res, req, thisthat, vote) {
             })
 
     }
-    else if (req.params.image_name === 'image2') {
+    else if (req.params.image_id === '2') {
         thisthat.vote_count_2 = thisthat.vote_count_2 + 1;
         thisthat
             .save()
@@ -87,16 +87,16 @@ function incrementVote(res, req, thisthat, vote) {
     }
     else {
         //destroy vote
-        res.json('need to specifiy image1 or image2');
+        res.json('need to specifiy an image_id of 1 or 2');
         vote.destroy();
     }
 
 };
 
-router.post('/:id/:image_name/vote', authController.tokenIsAuthenticated, function(req, res) {
+router.post('/:id/:image_id/vote', authController.tokenIsAuthenticated, function(req, res) {
 
- if (req.params.image_name != 'image1' && req.params.image_name != 'image2') {
-        res.json('Please specify image1 or image2')
+ if (2 < req.params.image_id || req.params.image_id < 1) {
+        res.json('Please specify an image_id of 1 or 2')
     }
     else {
         checkThisThatExists(res, req, checkUserCanVote)
@@ -250,7 +250,8 @@ router.get('/my/votes', authController.tokenIsAuthenticated, function(req, res) 
         '"thisthats"."vote_count_2", ' +
         '"thisthats"."createdAt", ' +
         '"thisthats"."userId", ' +
-        '"users"."username" ' +
+        '"users"."username", ' +
+        '"votes"."vote" ' +
         'from ' +
         '(select * from thisthat where id IN ' +
         '(select "thisthatId" from votes where "userId" = ' +
@@ -259,8 +260,9 @@ router.get('/my/votes', authController.tokenIsAuthenticated, function(req, res) 
         ' AND "is_active" = true AND "userId" != ' +
         req.user.id +
         ') AS thisthats ' +
-        'LEFT JOIN users on "thisthats"."userId" = "users"."id" ' +
-        'ORDER BY "thisthats"."createdAt" DESC';
+        'LEFT JOIN users ON "thisthats"."userId" = "users"."id" ' +
+        'LEFT JOIN votes ON "thisthats"."id" = "votes"."thisthatId" AND "votes"."userId" = ' + req.user.id +
+        ' ORDER BY "thisthats"."createdAt" DESC';
 
     db
         .sequelize
