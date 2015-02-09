@@ -7,30 +7,7 @@ var authController = require('../../../controllers/auth');
 
 
 
-router.get('/:id', authController.tokenIsAuthenticated, function(req, res) {
-    db
-        .ThisThat
-        .find({ where:{id: req.params.id}})
-        .complete(function(err, thisthat) {
-            if(!!err) {
-                console.log("An error occurred retrieving ThisThat:", err);
-                res.status(500);
-                res.send("An error occurred retrieving ThisThat");
-            } else if (!thisthat) {
-                res.status(204);
-                console.log("no ThisThat found");
-                res.send("no ThisThat found");
-            } else {
-                res.status(200);
-                res.set('Content-Type', 'application/json');
-                var returnObject = {
-                    ThisThats:thisthat
-                };
 
-                res.send(JSON.stringify(returnObject));
-            }
-        })
-});
 
 
 function checkThisThatExists(res, req, callback) {
@@ -168,6 +145,8 @@ router.delete('/:id', authController.tokenIsAuthenticated, function(req, res) {
 
 
 });
+
+
 
 function deleteThisThat (req, res, thisthat) {
 
@@ -389,5 +368,30 @@ function thisThatPostFailed (res, req, message) {
 function objectLength(obj) {
     return Object.keys(obj).length;
 }
+
+router.get('/:id', authController.tokenIsAuthenticated, function(req, res) {
+    db
+        .ThisThat
+        .find({ where:{id: req.params.id}})
+        .complete(function(err, thisthat) {
+            if(!!err) {
+                console.log("An error occurred retrieving ThisThat:", err);
+                res.status(500);
+                res.send("An error occurred retrieving ThisThat");
+            } else if (!thisthat) {
+                res.status(204);
+                console.log("no ThisThat found");
+                res.send("no ThisThat found");
+            } else {
+                res.status(200);
+                res.set('Content-Type', 'application/json');
+                var returnObject = {
+                    ThisThats:thisthat
+                };
+
+                res.send(JSON.stringify(returnObject));
+            }
+        })
+});
 
 module.exports = router;
