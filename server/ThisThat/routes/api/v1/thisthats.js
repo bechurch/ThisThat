@@ -7,6 +7,32 @@ var authController = require('../../../controllers/auth');
 
 
 
+router.get('/:id', authController.tokenIsAuthenticated, function(req, res) {
+    db
+        .ThisThat
+        .find({ where:{id: req.params.id}})
+        .complete(function(err, thisthat) {
+            if(!!err) {
+                console.log("An error occurred retrieving ThisThat:", err);
+                res.status(500);
+                res.send("An error occurred retrieving ThisThat");
+            } else if (!thisthat) {
+                res.status(204);
+                console.log("no ThisThat found");
+                res.send("no ThisThat found");
+            } else {
+                res.status(200);
+                res.set('Content-Type', 'application/json');
+                var returnObject = {
+                    ThisThats:thisthat
+                };
+
+                res.send(JSON.stringify(returnObject));
+            }
+        })
+});
+
+
 function checkThisThatExists(res, req, callback) {
     db
         .ThisThat
@@ -39,12 +65,14 @@ function checkUserCanVote(res, req, thisthat) {
             .complete(function(err, vote, created) {
                 if(!!err) {
                     console.log(err);
+                    res.status(500);
                     res.json("error while voting");
                 }
                 else if (created) {
                     incrementVote(res, req, thisthat, vote);
                 }
                 else {
+                    res.status(403);
                     res.json('user has already voted');
                 }
 
@@ -61,10 +89,11 @@ function incrementVote(res, req, thisthat, vote) {
             .complete(function(err) {
                 if (!!err) {
                     console.log('The instance has not been saved:', err);
+                    res.status(500);
                     res.json(err.detail);
                     vote.destroy();
                 } else {
-                    res.send(200);
+                    res.send(201);
 
                 }
             })
@@ -77,16 +106,18 @@ function incrementVote(res, req, thisthat, vote) {
             .complete(function(err) {
                 if (!!err) {
                     console.log('The instance has not been saved:', err);
+                    res.status(500);
                     res.json(err.detail);
                     vote.destroy();
                 } else {
-                    res.send(200);
+                    res.send(201);
 
                 }
             })
     }
     else {
         //destroy vote
+        res.status(400);
         res.json('need to specifiy an image_id of 1 or 2');
         vote.destroy();
     }
@@ -96,7 +127,8 @@ function incrementVote(res, req, thisthat, vote) {
 router.post('/:id/:image_id/vote', authController.tokenIsAuthenticated, function(req, res) {
 
  if (2 < req.params.image_id || req.params.image_id < 1) {
-        res.json('Please specify an image_id of 1 or 2')
+     res.status(400);
+     res.json('Please specify an image_id of 1 or 2')
     }
     else {
         checkThisThatExists(res, req, checkUserCanVote)
@@ -112,13 +144,16 @@ router.delete('/:id', authController.tokenIsAuthenticated, function(req, res) {
         .complete(function (err, thisthat) {
             if (!!err) {
                 console.log('An error occurred while searching thisthat:', err);
+                res.status(500);
                 res.json('An error occurred while searching thisthat');
             } else if (!thisthat) {
                 console.log('No thisthat matches the id');
+                res.status(400);
                 res.json('No thisthat matches the id');
             }
             else {
                 if (!thisthat.hasUser(req.user)) {
+                    res.status(401);
                     res.json('user does not own this thisthat')
                 }
                 else {
@@ -135,20 +170,16 @@ router.delete('/:id', authController.tokenIsAuthenticated, function(req, res) {
 });
 
 function deleteThisThat (req, res, thisthat) {
-    //var image1_path = 'public' + thisthat.image_1;
-    //var image2_path = 'public' + thisthat.image_2;
 
     thisthat
         .destroy()
         .complete(function(err){
             if(!!err) {
                 console.log(err);
+                res.status(500);
                 res.json('thisthat failed to delete from database');
             }
             else {
-                //fs.unlink(image1_path);
-                //fs.unlink(image2_path);
-
                 res.send(200);
             }
         })
@@ -171,6 +202,7 @@ router.get('/all', function(req, res) {
                 console.log("no ThisThats found");
                 res.send("no ThisThats found");
             } else {
+                res.status(200);
                 res.set('Content-Type', 'application/json');
                 var returnObject = {
                     ThisThats:thisthats
@@ -201,12 +233,14 @@ router.get('/', authController.tokenIsAuthenticated, function(req, res) {
                 req.user.id +
         ') AS thisthats ' +
         'LEFT JOIN users on "thisthats"."userId" = "users"."id" ' +
-        'ORDER BY "thisthats"."createdAt" DESC';
+        'ORDER BY "thisthats"."createdAt" DESC' +
+        'LIMIT 20';
 
     db
         .sequelize
         .query(sql_query)
         .success(function (thisthats){
+            res.status(200);
             res.set('Content-Type', 'application/json');
             var returnObject = {
                 thisthats:thisthats
@@ -225,11 +259,14 @@ router.get('/my', authController.tokenIsAuthenticated, function(req, res) {
         .complete(function(err, thisthats) {
             if(!!err) {
                 console.log("An error occurred retrieving ThisThats:", err);
+                res.send(500);
                 res.send("An error occurred retrieving ThisThats");
             } else if (!thisthats) {
                 console.log("no ThisThats found");
+                res.status(204);
                 res.send("no ThisThats found");
             } else {
+                res.status(200);
                 res.set('Content-Type', 'application/json');
                 var returnObject = {
                     ThisThats:thisthats
@@ -268,6 +305,7 @@ router.get('/my/votes', authController.tokenIsAuthenticated, function(req, res) 
         .sequelize
         .query(sql_query)
         .success(function (thisthats){
+            res.status(200);
             res.set('Content-Type', 'application/json');
             var returnObject = {
                 thisthats:thisthats
@@ -291,6 +329,7 @@ router.post('/', authController.tokenIsAuthenticated, function(req, res) {
 
 });
 
+
 function createThisThat (res, req, user) {
     console.log(req.files.image1);
     var thisthat = db.ThisThat.build({
@@ -312,9 +351,11 @@ function createThisThat (res, req, user) {
                     .complete(function(err){
                         if(!!err){
                             console.log("failed to associate thisthat with user");
+                            res.status(500);
                             thisThatPostFailed(res, req, "failed to associate thisthat with user")
                         } else {
                             console.log("associated successfully!");
+                            res.status(201);
                             res.json(thisthat);
                         }
                     });
@@ -340,7 +381,7 @@ function thisThatPostFailed (res, req, message) {
     });
 
 
-
+    res.status(500);
     res.send(message);
 
 };

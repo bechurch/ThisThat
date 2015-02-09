@@ -13,6 +13,7 @@ router.post('/', function(req, res) {
     console.log(phone_number);
 
     if(!username || !phone_number || !password){
+        res.status(400);
         res.send("missing parameters!\n");
     }
 
@@ -27,10 +28,12 @@ router.post('/', function(req, res) {
             .complete(function(err) {
                 if (!!err) {
                     console.log('The instance has not been saved:', err);
+                    res.status(500);
                     res.json("an error occured while creating user: " + err.detail);
                 } else {
-                    console.log('We have a persisted instance now');
-                    res.json(200)
+                    console.log('user created: ', user);
+                    res.status(201);
+                    res.send();
                 }
             });
     }
@@ -44,6 +47,7 @@ router.delete('/', authController.isAuthenticated, function(req, res) {
         .complete(function (err, user) {
             if (!!err) {
                 console.log('An error occurred while searching thisthat:', err);
+                res.status(500);
                 res.json('An error occurred while searching thisthat');
             }
             else {
@@ -52,6 +56,7 @@ router.delete('/', authController.isAuthenticated, function(req, res) {
                     .complete(function(err){
                         if(!!err) {
                             console.log(err);
+                            res.status(500);
                             res.json('thisthat failed to delete from database');
                         }
                         else {

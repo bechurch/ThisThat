@@ -9,10 +9,10 @@ var multer = require('multer');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
-var routes = require('./routes/index');
 var api_users = require('./routes/api/v1/users');
 var api_thisthat = require('./routes/api/v1/thisthats');
 var api_auth = require('./routes/api/v1/auth');
+var api_general = require('./routes/api/v1/general');
 
 var passport = require('passport');
 
@@ -71,6 +71,7 @@ app.use('/api/v1/users', api_users);
 app.use('/api/v1/thisthats', api_thisthat);
 
 app.use('/api/v1/auth', api_auth);
+app.use('/api/v1/general', api_general);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
