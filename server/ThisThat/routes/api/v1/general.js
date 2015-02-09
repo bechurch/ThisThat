@@ -5,7 +5,7 @@ var db = require('../../../models');
 
 router.get('/get_backgrounds', function(req, res) {
     db
-        .thisthat
+        .ThisThat
         .findAll({ attributes: ['image_1', 'age'],limit: 10, order: 'createdAt DESC'})
         .complete(function(err, images) {
             if(!!err) {
