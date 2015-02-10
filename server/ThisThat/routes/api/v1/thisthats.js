@@ -369,7 +369,7 @@ function objectLength(obj) {
     return Object.keys(obj).length;
 }
 
-router.get('/:id', authController.tokenIsAuthenticated, function(req, res) {
+router.get('/id/:id', authController.tokenIsAuthenticated, function(req, res) {
     db
         .ThisThat
         .find({ where:{id: req.params.id}})
