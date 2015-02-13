@@ -217,7 +217,7 @@ router.get('/', authController.tokenIsAuthenticated, function(req, res) {
             res.status(200);
             res.set('Content-Type', 'application/json');
             var returnObject = {
-                thisthats:thisthats
+                ThisThats:thisthats
             };
 
             res.send(JSON.stringify(returnObject));
