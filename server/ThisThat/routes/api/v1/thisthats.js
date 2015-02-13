@@ -5,11 +5,6 @@ var fs = require('fs');
 var authController = require('../../../controllers/auth');
 
 
-
-
-
-
-
 function checkThisThatExists(res, req, callback) {
     db
         .ThisThat
@@ -212,7 +207,7 @@ router.get('/', authController.tokenIsAuthenticated, function(req, res) {
                 req.user.id +
         ') AS thisthats ' +
         'LEFT JOIN users on "thisthats"."userId" = "users"."id" ' +
-        'ORDER BY "thisthats"."createdAt" DESC' +
+        'ORDER BY "thisthats"."createdAt" DESC ' +
         'LIMIT 20';
 
     db
