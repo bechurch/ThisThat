@@ -13,7 +13,7 @@ router.get('/get_backgrounds', function(req, res) {
                 res.send("An error occurred retrieving images");
             } else if (!images) {
                 console.log("no images found");
-                res.send("no images found");
+                res.json("no images found");
             } else {
                 res.status(200);
                 res.set('Content-Type', 'application/json');

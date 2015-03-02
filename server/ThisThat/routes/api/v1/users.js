@@ -14,7 +14,7 @@ router.post('/', function(req, res) {
 
     if(!username || !phone_number || !password){
         res.status(400);
-        res.send("missing parameters!\n");
+        res.json("missing parameters!\n");
     }
 
     else{
@@ -32,8 +32,8 @@ router.post('/', function(req, res) {
                     res.json("an error occured while creating user: " + err.detail);
                 } else {
                     console.log('user created: ', user);
-                    res.status(201);
-                    res.send();
+                    res.status(200);
+                    res.json('user created');
                 }
             });
     }
@@ -60,7 +60,8 @@ router.delete('/', authController.isAuthenticated, function(req, res) {
                             res.json('thisthat failed to delete from database');
                         }
                         else {
-                            res.send(200);
+                            res.status(200);
+                            res.json('user deleted');
                         }
                     })
 

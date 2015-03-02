@@ -46,7 +46,7 @@ function createNewToken(req, res) {
 				res.status(500);
 				res.json(err);
 			} else {
-				res.status(201);
+				res.status(200);
 				res.json(token);
 			}
 		})

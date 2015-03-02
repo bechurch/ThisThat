@@ -65,7 +65,8 @@ function incrementVote(res, req, thisthat, vote) {
                     res.json(err.detail);
                     vote.destroy();
                 } else {
-                    res.send(201);
+                    res.status(200);
+                    res.json('vote successfully cast');
 
                 }
             })
@@ -82,8 +83,8 @@ function incrementVote(res, req, thisthat, vote) {
                     res.json(err.detail);
                     vote.destroy();
                 } else {
-                    res.send(201);
-
+                    res.status(200);
+                    res.json('vote successfully cast');
                 }
             })
     }
@@ -154,7 +155,8 @@ function deleteThisThat (req, res, thisthat) {
                 res.json('thisthat failed to delete from database');
             }
             else {
-                res.send(200);
+                res.status(200);
+                res.json('vote successfully cast');
             }
         })
 
@@ -171,10 +173,12 @@ router.get('/all', function(req, res) {
         .complete(function(err, thisthats) {
             if(!!err) {
                 console.log("An error occurred retrieving ThisThats:", err);
-                res.send("An error occurred retrieving ThisThats");
+                res.status(500);
+                res.json("An error occurred retrieving ThisThats");
             } else if (!thisthats) {
                 console.log("no ThisThats found");
-                res.send("no ThisThats found");
+                res.status(500);
+                res.json("no ThisThats found");
             } else {
                 res.status(200);
                 res.set('Content-Type', 'application/json');
@@ -233,12 +237,12 @@ router.get('/my', authController.tokenIsAuthenticated, function(req, res) {
         .complete(function(err, thisthats) {
             if(!!err) {
                 console.log("An error occurred retrieving ThisThats:", err);
-                res.send(500);
-                res.send("An error occurred retrieving ThisThats");
+                res.status(500);
+                res.json("An error occurred retrieving ThisThats");
             } else if (!thisthats) {
                 console.log("no ThisThats found");
                 res.status(204);
-                res.send("no ThisThats found");
+                res.json("no ThisThats found");
             } else {
                 res.status(200);
                 res.set('Content-Type', 'application/json');
@@ -329,7 +333,7 @@ function createThisThat (res, req, user) {
                             thisThatPostFailed(res, req, "failed to associate thisthat with user")
                         } else {
                             console.log("associated successfully!");
-                            res.status(201);
+                            res.status(200);
                             res.json(thisthat);
                         }
                     });
@@ -356,7 +360,7 @@ function thisThatPostFailed (res, req, message) {
 
 
     res.status(500);
-    res.send(message);
+    res.json(message);
 
 };
 
@@ -372,11 +376,11 @@ router.get('/:id', authController.tokenIsAuthenticated, function(req, res) {
             if(!!err) {
                 console.log("An error occurred retrieving ThisThat:", err);
                 res.status(500);
-                res.send("An error occurred retrieving ThisThat");
+                res.json("An error occurred retrieving ThisThat");
             } else if (!thisthat) {
                 res.status(204);
                 console.log("no ThisThat found");
-                res.send("no ThisThat found");
+                res.json("no ThisThat found");
             } else {
                 res.status(200);
                 res.set('Content-Type', 'application/json');
