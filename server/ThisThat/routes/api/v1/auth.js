@@ -95,7 +95,10 @@ router.post('/logout', function(req, res) {
 
 					expireToken(res, req, token, function (req, res) {
 						res.status(200);
-						var msg = "logged out";
+
+						var msg = {
+							msg:"logged out"
+						};
 						res.json(msg);
 					})
 
