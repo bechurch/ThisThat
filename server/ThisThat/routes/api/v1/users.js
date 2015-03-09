@@ -14,7 +14,9 @@ router.post('/', function(req, res) {
 
     if(!username || !phone_number || !password){
         res.status(400);
-        res.json("missing parameters!\n");
+        res.json({
+            message: "missing parameters!"
+        });
     }
 
     else{
@@ -29,11 +31,15 @@ router.post('/', function(req, res) {
                 if (!!err) {
                     console.log('The instance has not been saved:', err);
                     res.status(500);
-                    res.json("an error occured while creating user: " + err.detail);
+                    res.json({
+                        message: "an error occured while creating user: " + err.detail
+                    });
                 } else {
                     console.log('user created: ', user);
                     res.status(200);
-                    res.json('user created');
+                    res.json({
+                        message: 'user created'
+                    });
                 }
             });
     }
@@ -48,7 +54,9 @@ router.delete('/', authController.isAuthenticated, function(req, res) {
             if (!!err) {
                 console.log('An error occurred while searching thisthat:', err);
                 res.status(500);
-                res.json('An error occurred while searching thisthat');
+                res.json({
+                    message: 'An error occurred while searching thisthat'
+                });
             }
             else {
                 user
@@ -57,11 +65,15 @@ router.delete('/', authController.isAuthenticated, function(req, res) {
                         if(!!err) {
                             console.log(err);
                             res.status(500);
-                            res.json('thisthat failed to delete from database');
+                            res.json({
+                                message:'thisthat failed to delete from database'
+                            });
                         }
                         else {
                             res.status(200);
-                            res.json('user deleted');
+                            res.json({
+                                message: 'user deleted'
+                            });
                         }
                     })
 

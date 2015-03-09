@@ -78,7 +78,9 @@ router.post('/login', authController.isAuthenticated, function(req, res) {
 router.post('/logout', function(req, res) {
 	if (!req.body.token) {
 		res.status(400);
-		res.json("please identify yourself");
+		res.json({
+			message: "please identify yourself"
+		});
 
 	} else {
 
@@ -95,17 +97,17 @@ router.post('/logout', function(req, res) {
 
 					expireToken(res, req, token, function (req, res) {
 						res.status(200);
-
-						var msg = {
-							msg:"logged out"
-						};
-						res.json(msg);
+						res.json({
+							message:"logged out"
+						});
 					})
 
 				}
 				else {
 					res.status(400);
-					res.json("token doesn't exist");
+					res.json({
+						message: "token doesn't exist"
+					});
 				}
 
 			})

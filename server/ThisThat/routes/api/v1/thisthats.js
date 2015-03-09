@@ -12,10 +12,16 @@ function checkThisThatExists(res, req, callback) {
         .complete(function (err, thisthat) {
             if (!!err) {
                 console.log('An error occurred while searching experience:', err);
-                res.json('An error occurred while searching experience');
+                res.status(500);
+                res.json({
+                    message: 'An error occurred while searching experience'
+                });
             } else if (!thisthat) {
                 console.log('No experience matches the id');
-                res.json('No experience matches the id');
+                res.status(410);
+                res.json({
+                    message: 'No experience matches the id'
+                });
             }
             else {
                 callback(res, req, thisthat)
@@ -27,7 +33,10 @@ function checkThisThatExists(res, req, callback) {
 
 function checkUserCanVote(res, req, thisthat) {
     if (thisthat.hasUser(req.user)) {
-        res.json('user does owns this experience and cannot vote')
+        res.status(403);
+        res.json({
+            message: 'user does owns this experience and cannot vote'
+        })
     }
     else {
 
@@ -38,14 +47,18 @@ function checkUserCanVote(res, req, thisthat) {
                 if(!!err) {
                     console.log(err);
                     res.status(500);
-                    res.json("error while voting");
+                    res.json({
+                        message: "error while voting"
+                    });
                 }
                 else if (created) {
                     incrementVote(res, req, thisthat, vote);
                 }
                 else {
                     res.status(403);
-                    res.json('user has already voted');
+                    res.json({
+                        message: 'user has already voted'
+                    });
                 }
 
             })
@@ -66,7 +79,9 @@ function incrementVote(res, req, thisthat, vote) {
                     vote.destroy();
                 } else {
                     res.status(200);
-                    res.json('vote successfully cast');
+                    res.json({
+                        message: 'vote successfully cast'
+                    });
 
                 }
             })
@@ -84,14 +99,18 @@ function incrementVote(res, req, thisthat, vote) {
                     vote.destroy();
                 } else {
                     res.status(200);
-                    res.json('vote successfully cast');
+                    res.json({
+                        message: 'vote successfully cast'
+                    });
                 }
             })
     }
     else {
         //destroy vote
         res.status(400);
-        res.json('need to specifiy an image_id of 1 or 2');
+        res.json({
+            message: 'need to specifiy an image_id of 1 or 2'
+        });
         vote.destroy();
     }
 
@@ -101,7 +120,9 @@ router.post('/:id/:image_id/vote', authController.tokenIsAuthenticated, function
 
  if (2 < req.params.image_id || req.params.image_id < 1) {
      res.status(400);
-     res.json('Please specify an image_id of 1 or 2')
+     res.json({
+         message: 'Please specify an image_id of 1 or 2'
+     })
     }
     else {
         checkThisThatExists(res, req, checkUserCanVote)
@@ -118,16 +139,22 @@ router.delete('/:id', authController.tokenIsAuthenticated, function(req, res) {
             if (!!err) {
                 console.log('An error occurred while searching thisthat:', err);
                 res.status(500);
-                res.json('An error occurred while searching thisthat');
+                res.json({
+                    message: 'An error occurred while searching thisthat'
+                });
             } else if (!thisthat) {
                 console.log('No thisthat matches the id');
                 res.status(400);
-                res.json('No thisthat matches the id');
+                res.json({
+                    message: 'No thisthat matches the id'
+                });
             }
             else {
                 if (!thisthat.hasUser(req.user)) {
                     res.status(401);
-                    res.json('user does not own this thisthat')
+                    res.json({
+                        message: 'user does not own this thisthat'
+                    });
                 }
                 else {
                     deleteThisThat(req, res, thisthat);
@@ -152,11 +179,15 @@ function deleteThisThat (req, res, thisthat) {
             if(!!err) {
                 console.log(err);
                 res.status(500);
-                res.json('thisthat failed to delete from database');
+                res.json({
+                    message: 'thisthat failed to delete from database'
+                });
             }
             else {
                 res.status(200);
-                res.json('vote successfully cast');
+                res.json({
+                    message: 'vote successfully cast'
+                });
             }
         })
 
@@ -174,11 +205,15 @@ router.get('/all', function(req, res) {
             if(!!err) {
                 console.log("An error occurred retrieving ThisThats:", err);
                 res.status(500);
-                res.json("An error occurred retrieving ThisThats");
+                res.json({
+                    message: "An error occurred retrieving ThisThats"
+                });
             } else if (!thisthats) {
                 console.log("no ThisThats found");
                 res.status(500);
-                res.json("no ThisThats found");
+                res.json({
+                    message: "no ThisThats found"
+                });
             } else {
                 res.status(200);
                 res.set('Content-Type', 'application/json');
@@ -238,11 +273,15 @@ router.get('/my', authController.tokenIsAuthenticated, function(req, res) {
             if(!!err) {
                 console.log("An error occurred retrieving ThisThats:", err);
                 res.status(500);
-                res.json("An error occurred retrieving ThisThats");
+                res.json({
+                    message: "An error occurred retrieving ThisThats"
+                });
             } else if (!thisthats) {
                 console.log("no ThisThats found");
                 res.status(204);
-                res.json("no ThisThats found");
+                res.json({
+                    message: "no ThisThats found"
+                });
             } else {
                 res.status(200);
                 res.set('Content-Type', 'application/json');
@@ -360,7 +399,9 @@ function thisThatPostFailed (res, req, message) {
 
 
     res.status(500);
-    res.json(message);
+    res.json({
+        message: message
+    });
 
 };
 
@@ -376,11 +417,15 @@ router.get('/:id', authController.tokenIsAuthenticated, function(req, res) {
             if(!!err) {
                 console.log("An error occurred retrieving ThisThat:", err);
                 res.status(500);
-                res.json("An error occurred retrieving ThisThat");
+                res.json({
+                    message: "An error occurred retrieving ThisThat"
+                });
             } else if (!thisthat) {
                 res.status(204);
                 console.log("no ThisThat found");
-                res.json("no ThisThat found");
+                res.json({
+                    message: "no ThisThat found"
+                });
             } else {
                 res.status(200);
                 res.set('Content-Type', 'application/json');
