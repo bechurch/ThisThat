@@ -85,4 +85,63 @@ router.delete('/', authController.isAuthenticated, function(req, res) {
 
 });
 
+router.get('/:username', authController.tokenIsAuthenticated, function(req, res) {
+    /*
+     returns the user that matches the username provided
+     */
+    db
+        .User
+        .find({ where:
+        {
+            username: req.params.username
+        },
+            attributes: ['id', 'username']
+        })
+        .complete(function(err, user) {
+            if(!!err){
+                res.json(err)
+            } else {
+                var sql_query = 'select "thisthats"."id", ' +
+                    '"thisthats"."expires_at", ' +
+                    '"thisthats"."message", ' +
+                    '"thisthats"."image_1", ' +
+                    '"thisthats"."image_2", ' +
+                    '"thisthats"."vote_count_1", ' +
+                    '"thisthats"."vote_count_2", ' +
+                    '"thisthats"."createdAt" ' +
+                    'from ' +
+                    '(select * from thisthat where id NOT IN ' +
+                    '(select "thisthatId" from votes where "userId" = ' +
+                    req.user.id +
+                    ')' +
+                    ' AND "is_active" = true AND "userId" = ' +
+                    user.id +
+                    ' AND "feed_permissions" && ARRAY[0,' +
+                    req.user.id +
+                    ']) AS thisthats ' +
+                    'ORDER BY "thisthats"."createdAt" DESC ' +
+                    'LIMIT 20';
+
+                db
+                    .sequelize
+                    .query(sql_query)
+                    .success(function (thisthats){
+                        res.status(200);
+                        res.set('Content-Type', 'application/json');
+                        var returnObject = {
+                            User: user,
+                            ThisThats:thisthats
+                        };
+
+                        res.send(JSON.stringify(returnObject));
+
+                    });
+
+            }
+
+
+        })
+
+});
+
 module.exports = router;

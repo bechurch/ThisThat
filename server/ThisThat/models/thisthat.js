@@ -26,7 +26,12 @@ module.exports = function(sequelize, DataTypes) {
             type: DataTypes.INTEGER,
             defaultValue: 0,
             allowNull: false
+        },
+        feed_permissions: {
+            type: DataTypes.ARRAY(DataTypes.INTEGER),
+            allowNull: false
         }
+
 
 
     }, {

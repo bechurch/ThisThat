@@ -20,6 +20,7 @@ module.exports = function(sequelize, DataTypes) {
                 User.hasMany(models.ThisThat, {onDelete: 'cascade', hooks: true});
                 User.hasMany(models.Vote);
                 User.hasMany(models.Token, {onDelete: 'cascade'});
+                User.hasMany(models.Friend, {onDelete: 'cascade'})
             },
             tableName: 'users'
         }

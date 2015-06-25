@@ -13,6 +13,8 @@ var api_users = require('./routes/api/v1/users');
 var api_thisthat = require('./routes/api/v1/thisthats');
 var api_auth = require('./routes/api/v1/auth');
 var api_general = require('./routes/api/v1/general');
+var api_friends = require('./routes/api/v1/friends');
+
 
 var passport = require('passport');
 
@@ -68,6 +70,7 @@ app.use('/', routes);
 app.use('/users', users);
 
 app.use('/api/v1/users', api_users);
+app.use('/api/v1/friends', api_friends);
 app.use('/api/v1/thisthats', api_thisthat);
 
 app.use('/api/v1/auth', api_auth);

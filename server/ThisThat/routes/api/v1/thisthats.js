@@ -35,9 +35,17 @@ function checkUserCanVote(res, req, thisthat) {
     if (thisthat.hasUser(req.user)) {
         res.status(403);
         res.json({
-            message: 'user does owns this experience and cannot vote'
+            message: 'user owns this experience and cannot vote'
         })
     }
+
+    else if (thisthat.feed_permissions.indexOf(req.user.id) < 0 && thisthat.feed_permissions.indexOf(0) < 0) {
+        res.status(403);
+        res.json({
+            message: 'user does not have permission to vote'
+        });
+    }
+
     else {
 
         db
@@ -186,7 +194,7 @@ function deleteThisThat (req, res, thisthat) {
             else {
                 res.status(200);
                 res.json({
-                    message: 'vote successfully cast'
+                    message: 'thisThat deleted'
                 });
             }
         })
@@ -244,7 +252,9 @@ router.get('/', authController.tokenIsAuthenticated, function(req, res) {
                 ')' +
             ' AND "is_active" = true AND "userId" != ' +
                 req.user.id +
-        ') AS thisthats ' +
+        ' AND "feed_permissions" && ARRAY[0,' +
+        req.user.id +
+        ']) AS thisthats ' +
         'LEFT JOIN users on "thisthats"."userId" = "users"."id" ' +
         'ORDER BY "thisthats"."createdAt" DESC ' +
         'LIMIT 20';
@@ -338,6 +348,8 @@ router.post('/', authController.tokenIsAuthenticated, function(req, res) {
 
     if (objectLength(req.files) != 2) {
         thisThatPostFailed(res, req, "need to upload 2 images")
+    } else if (!req.body.feed_permissions) {
+        thisThatPostFailed(res, req, "please specify who should be able to view the post")
     }
 
     else {
@@ -348,11 +360,11 @@ router.post('/', authController.tokenIsAuthenticated, function(req, res) {
 
 
 function createThisThat (res, req, user) {
-    console.log(req.files.image1);
     var thisthat = db.ThisThat.build({
                         message: req.body.message,
                         image_1: req.files.image1.path.replace('public', ''),
-                        image_2: req.files.image2.path.replace('public', '')
+                        image_2: req.files.image2.path.replace('public', ''),
+                        feed_permissions: req.body.feed_permissions.split(',')
                     });
 
     thisthat
