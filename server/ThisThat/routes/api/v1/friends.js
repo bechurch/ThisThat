@@ -30,42 +30,65 @@ router.get('/', authController.tokenIsAuthenticated, function(req, res) {
         });
 });
 
-function friendExists(friendId) {
+function friendExists(friendId, callback) {
     db
         .User
         .find({ where:{id: friendId}})
         .complete(function(err, friend) {
-            if(!!err) {
-                return false;
-            } else {
-                return friend;
+            if(friend) {
+                callback(friend);
             }
+            else callback();
         })
 
 }
 
 router.post('/add/:id', authController.tokenIsAuthenticated, function(req, res) {
-    if (req.user.id != req.params.id && friendExists(req.params.id)){
-        var friend = db.Friend.build({
-            userId: req.user.id,
-            friendId: req.params.id
-        });
+    console.log(req.params.id);
+    console.log(req.user.id);
 
-        friend
-            .save()
-            .complete(function(err, friend) {
-                if (!!err) {
-                    console.log('The instance has not been saved:', err);
-                } else {
-                    console.log('We have a persisted instance now');
-                    res.send(friend);
-                }
-            });
-    }
-    else {
-        res.status(401);
-        res.json("unable to friend yourself or a non existant user");
-    }
+    friendExists(req.params.id, function (canFriend) {
+        if (canFriend && req.user.id != req.params.id) {
+            db
+                .Friend
+                .find({ where: {friendId: req.params.id, userId: req.user.id}})
+                .complete(function(err, friend){
+                    if (!!err) {
+                        res.send(err);
+                    }
+                    else if (friend) {
+                        res.status(401);
+                        res.json('They are already a friend');
+                    }
+                    else {
+                        var newFriend = db.Friend.build({
+                            userId: req.user.id,
+                            friendId: req.params.id
+                        });
+
+                        newFriend
+                            .save()
+                            .complete(function(err, new_friend) {
+                                if (!!err) {
+                                    console.log('The instance has not been saved:', err);
+                                } else {
+                                    console.log('We have a persisted instance now');
+                                    res.send(new_friend);
+                                }
+                            });
+                    }
+
+            })
+
+        }
+        else {
+            res.status(401);
+            res.json("unable to friend yourself or a non existant user");
+        }
+        })
+
+
+
 });
 
 router.get('/search', authController.tokenIsAuthenticated, function(req, res) {
